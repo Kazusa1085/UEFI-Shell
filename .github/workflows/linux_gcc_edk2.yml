@@ -2,8 +2,9 @@ name: Linux, gcc, EDK2
 
 on:
   push:
-    tags:
-      - '*'
+    branches: [ main ] # Adjust branches as needed
+  pull_request:
+    branches: [ main ] # Adjust branches as needed
 
 env:
   COMPILER: GCC5
