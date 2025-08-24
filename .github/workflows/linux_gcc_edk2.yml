@@ -2,9 +2,8 @@ name: Linux, gcc, EDK2
 
 on:
   push:
-    branches: [ main ] # Adjust branches as needed
-  pull_request:
-    branches: [ main ] # Adjust branches as needed
+    tags:
+      - '*'
 
 env:
   COMPILER: GCC5
@@ -109,10 +108,10 @@ jobs:
           if [ -f $BUILD_TYPE/efi/boot/bootaarch64.efi ]; then
             mv $BUILD_TYPE/efi/boot/bootaarch64.efi $BUILD_TYPE/efi/boot/bootaa64.efi
           fi
-          printf "*** UEFI Shell v%s, release %s%s ***\n\n" ${{ steps.set_version.outputs.shell_version }} 25H2} "$( [ $BUILD_TYPE == DEBUG ] && echo ' (DEBUG BUILD)')" > $BUILD_TYPE/README.txt
+          printf "*** UEFI Shell v%s, release %s%s ***\n\n" ${{ steps.set_version.outputs.shell_version }} ${{ steps.set_version.outputs.shell_release }} "$( [ $BUILD_TYPE == DEBUG ] && echo ' (DEBUG BUILD)')" > $BUILD_TYPE/README.txt
           printf "This bootable image contains builds of the official UEFI Shell, as provided by\n" >> $BUILD_TYPE/README.txt
           printf "the Open Source 'EDK2' project (https://github.com/tianocore/edk2).\n\n" >> $BUILD_TYPE/README.txt
-          printf "More specifically, this release, which we call '%s', was produced using the\n" 25H2} >> $BUILD_TYPE/README.txt
+          printf "More specifically, this release, which we call '%s', was produced using the\n" ${{ steps.set_version.outputs.shell_release }} >> $BUILD_TYPE/README.txt
           printf "'%s' version of the EDK2 source available at:\n" ${{ steps.set_version.outputs.edk2_tag }} >> $BUILD_TYPE/README.txt
           printf "https://github.com/tianocore/edk2/releases/tag/%s\n\n" ${{ steps.set_version.outputs.edk2_tag }} >> $BUILD_TYPE/README.txt
           printf "This image supports the following UEFI platform architectures:\n" >> $BUILD_TYPE/README.txt
@@ -129,7 +128,7 @@ jobs:
           printf "that guarantees that no malicious code can have been injected.\n" >> $BUILD_TYPE/README.txt
           printf "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" > Version.xml
           printf "<release>\n" >> Version.xml
-          printf "  <name>%s (%s)</name>\n" 25H2} ${{ steps.set_version.outputs.edk2_tag }} >> Version.xml
+          printf "  <name>%s (%s)</name>\n" ${{ steps.set_version.outputs.shell_release }} ${{ steps.set_version.outputs.edk2_tag }} >> Version.xml
           printf "  <shell_version>%s</shell_version>\n" ${{ steps.set_version.outputs.shell_version }} >> Version.xml
           printf "  <build_date>%s</build_date>\n" ${{ steps.set_version.outputs.build_date }} >> Version.xml
           printf "  <supported_archs>\n" >> Version.xml
@@ -143,7 +142,7 @@ jobs:
     - name: Generate ISO images
       run: |
         for BUILD_TYPE in ${{ env.BUILD_TYPES }}; do
-          genisoimage -v -V "UEFI SHELL ${{ steps.set_version.outputs.shell_version }} 25H2} ($BUILD_TYPE)" -JR -o "UEFI-Shell-${{ steps.set_version.outputs.shell_version }}-25H2}-$BUILD_TYPE.iso" $BUILD_TYPE
+          genisoimage -v -V "UEFI SHELL ${{ steps.set_version.outputs.shell_version }} ${{ steps.set_version.outputs.shell_release }} ($BUILD_TYPE)" -JR -o "UEFI-Shell-${{ steps.set_version.outputs.shell_version }}-${{ steps.set_version.outputs.shell_release }}-$BUILD_TYPE.iso" $BUILD_TYPE
         done
 
     - name: Display SHA-256
@@ -162,7 +161,7 @@ jobs:
 
     - name: Create release blurb
       run: |
-        printf "**UEFI Shell v%s, release %s**\n\n" ${{ steps.set_version.outputs.shell_version }} 25H2} > body.txt
+        printf "**UEFI Shell v%s, release %s**\n\n" ${{ steps.set_version.outputs.shell_version }} ${{ steps.set_version.outputs.shell_release }} > body.txt
         printf "Built from [%s](https://github.com/tianocore/edk2/releases/tag/%s) and supporting:\n" ${{ steps.set_version.outputs.edk2_tag }} ${{ steps.set_version.outputs.edk2_tag }} >> body.txt
         for ARCH in ${{ env.ARCHS }}; do
           printf "* \`%s\`\n" $ARCH >> body.txt
